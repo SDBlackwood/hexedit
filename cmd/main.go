@@ -17,22 +17,45 @@
 * Octal is a numeral system that uses the base 8, and the numbers 0 through 7.
 * It's also known as base 8 or octonary.
 *
-*
+* We want to represent the text in the following ways:
+* - Hexidecimal
+* - Text (ASCII)
+* - binary
+* - octal
+* - uint8
+* - int8
+* - uint16
+* - int16
+* - uint32
+* - int32
+* - uint64
+* - int64
+* - ULEB128
+* - SLEB128
+* - float16
+* - bfloat16
+* - float32
+* - float64
+* - GUID
+* - ASCII
+* - UTF-8
+* - UTF-16
+* - GB18030
+* - BIG5
+* - SHIFT-JIS
  */
 package main
 
 import (
 	"flag"
-	"fmt"
-	"log/slog"
 	"os"
 
+	"github.com/SDBlackwood/hexedit/app"
 	"github.com/SDBlackwood/hexedit/internal"
 )
 
 func main() {
-	var logger *slog.Logger
-	logger = internal.Logger()
+	logger := internal.Logger()
 
 	// Parse the command line arguments
 	filePath := flag.String("filepath", "", "Path to the the input file")
@@ -40,24 +63,27 @@ func main() {
 	// Parse the command line variables
 	flag.Parse()
 
-	logger.Debug("cmd args", "filepath", *filePath)
+	app := app.NewApp(*filePath, logger)
+	err := app.OpenFile()
 
-	if *filePath == "" {
-		fmt.Println("File path cannot be empty")
-		logger.Error("Empty cmd args", "filepath", *filePath)
+	defer app.Close()
+
+	
+	if err != nil {
+		logger.Error("error opening file", "error", err)
 		os.Exit(1)
 	}
 
-	// Read the file into memory
-	fileBytes, err := os.ReadFile(*filePath)
+	logger.Debug("cmd args", "filepath", *filePath)
+
+	// Render the UI
+	err = app.Render()
 	if err != nil {
-		fmt.Printf("Cannot read file path %v\n", *filePath)
-		logger.Error("invalid filepath", "filepath", *filePath)
+		logger.Error("error rendering UI", "error", err)
+		os.Exit(1)
 	}
 
-	// Convert byte data to hex
-	// A bytes is a 8bit value
-	for i := 0; i < len(fileBytes); i++ {
-		fmt.Printf("%v:%v:%v", string(fileBytes[i]), fileBytes[i], internal.HexConvert(fileBytes[i]))		
-	}
+	// Start the event loop
+	app.Run()
+	// Handle events/
 }
