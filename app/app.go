@@ -15,7 +15,6 @@ type App struct {
 	fileHandler *os.File
 	logger      *slog.Logger
 	tW, tH      int
-	lines       chan string
 }
 
 // TUIApp is the interface for the App struct
@@ -41,14 +40,11 @@ func NewApp(filePath string, logger *slog.Logger) *App {
 		logger.Error("error getting terminal size", "error", err)
 	}
 
-	lines := make(chan string)
-
 	return &App{
 		filePath: filePath,
 		logger:   logger,
 		tW:       tW,
 		tH:       tH,
-		lines:    lines,
 	}
 }
 
@@ -83,7 +79,7 @@ func (a *App) Run() {
 }
 
 func (a *App) HandleEvents() (err error) {
-	// HandleEvents handles events from the event loop
+	//}/ HandleEvents handles events from the event loop
 	return nil
 }
 
@@ -92,21 +88,11 @@ func (a *App) Render() (err error) {
 	// Read line by line in the file handler and send to a channel
 	scanner := bufio.NewScanner(a.fileHandler)
 	go func() {
-		defer close(a.lines)
-
 		for scanner.Scan() {
 			line := scanner.Text()
-			a.lines <- line
-		}
-		if err := scanner.Err(); err != nil {
-			a.logger.Error("Error reading lines")
+			fmt.Println(line)
 		}
 	}()
-
-	for line := range a.lines {
-		// Render to TUI
-		fmt.Println(line)
-	}
 
 	return nil
 }
