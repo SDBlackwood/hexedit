@@ -7,14 +7,16 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/SDBlackwood/hexedit/representation"
 	"golang.org/x/term"
 )
 
 type App struct {
-	filePath    string
-	fileHandler *os.File
-	logger      *slog.Logger
-	tW, tH      int
+	filePath     string
+	fileHandler  *os.File
+	logger       *slog.Logger
+	tW, tH       int
+	closeChannel chan int
 }
 
 // TUIApp is the interface for the App struct
@@ -40,11 +42,14 @@ func NewApp(filePath string, logger *slog.Logger) *App {
 		logger.Error("error getting terminal size", "error", err)
 	}
 
+	closeChannel := make(chan int, 1)
+
 	return &App{
-		filePath: filePath,
-		logger:   logger,
-		tW:       tW,
-		tH:       tH,
+		filePath:     filePath,
+		logger:       logger,
+		tW:           tW,
+		tH:           tH,
+		closeChannel: closeChannel,
 	}
 }
 
@@ -61,6 +66,7 @@ func (a *App) Close() (err error) {
 	if err != nil {
 		return err
 	}
+	close(a.closeChannel)
 	return nil
 }
 
@@ -71,7 +77,12 @@ func (a *App) Run() {
 	signal.Notify(c, os.Interrupt)
 	for {
 		go func() {
-			for _ = range c {
+			for {
+				select {
+				case <-c:
+				case <-a.closeChannel:
+				}
+				a.Close()
 				os.Exit(0)
 			}
 		}()
@@ -83,14 +94,21 @@ func (a *App) HandleEvents() (err error) {
 	return nil
 }
 
-func (a *App) Render() (err error) {
+func (a *App) Render(pipeOutput bool) (err error) {
 	// Render renders the UI on the initialisation of the app
 	// Read line by line in the file handler and send to a channel
+	// If we are outputing and exiting, send a signal to the event loop to close
 	scanner := bufio.NewScanner(a.fileHandler)
 	go func() {
 		for scanner.Scan() {
 			line := scanner.Text()
-			fmt.Println(line)
+			rendered := representation.Render(a.logger, line)
+			for _, line := range rendered {
+				fmt.Println(line)
+			}
+		}
+		if pipeOutput {
+			a.closeChannel <- 1
 		}
 	}()
 

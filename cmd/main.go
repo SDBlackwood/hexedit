@@ -58,7 +58,8 @@ func main() {
 	logger := internal.Logger()
 
 	// Parse the command line arguments
-	filePath := flag.String("filepath", "", "Path to the the input file")
+	filePath := flag.String("f", "", "Path to the the input file")
+	pipeOutput := flag.Bool("o", false, "Output the contents and exit")
 
 	// Parse the command line variables
 	flag.Parse()
@@ -68,16 +69,15 @@ func main() {
 
 	defer app.Close()
 
-	
 	if err != nil {
 		logger.Error("error opening file", "error", err)
 		os.Exit(1)
 	}
 
-	logger.Debug("cmd args", "filepath", *filePath)
+	logger.Debug("cmd args", "filePath", *filePath)
 
 	// Render the UI
-	err = app.Render()
+	err = app.Render(*pipeOutput)
 	if err != nil {
 		logger.Error("error rendering UI", "error", err)
 		os.Exit(1)
@@ -85,5 +85,6 @@ func main() {
 
 	// Start the event loop
 	app.Run()
+
 	// Handle events/
 }

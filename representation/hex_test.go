@@ -1,4 +1,4 @@
-package internal
+package representation
 
 import "testing"
 
@@ -26,11 +26,10 @@ func TestHexConvert(t *testing.T) {
 			args: args{decimal: 0},
 			want: "00",
 		},
-		
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := HexConvert(tt.args.decimal); got != tt.want {
+			if got := Hex(tt.args.decimal); got != tt.want {
 				t.Errorf("HexConvert() = %v, want %v", got, tt.want)
 			}
 		})
