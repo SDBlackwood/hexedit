@@ -24,15 +24,17 @@ func Render(logger *slog.Logger, line string) []string {
 
 		logger.Debug("info", "byteLength", byteLength, "char", string(char))
 
-		// Append the character to the padded line buffer with the correct amount of padding
+		// Add character to the padded line buffer with the correct amount of padding
 		paddedChar := fmt.Sprintf("%-*s", byteLength*3, string(char))
 
 		// Append the padded character to the text buffer
 		textBuf = append(textBuf, []rune(paddedChar)...)
 
-		// Append the hex value of the character to the hex buffer
-		hexBuf = append(hexBuf, []rune(Hex(uint8(char)))...)
-		hexBuf = append(hexBuf, ' ')
+		// Convert rune to string, then to byte slice to see the UTF-8 encoding
+		bytes := []byte(string(char))
+		for _, b := range bytes {
+			hexBuf = append(hexBuf, []rune(fmt.Sprintf("%X ", b))...)
+		}
 	}
 
 	// Return the text and hex buffers as a slice of strings
