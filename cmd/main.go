@@ -48,6 +48,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/SDBlackwood/hexedit/app"
@@ -60,9 +61,32 @@ func main() {
 	// Parse the command line arguments
 	filePath := flag.String("f", "", "Path to the the input file")
 	pipeOutput := flag.Bool("o", false, "Output the contents and exit")
+	showHelp := flag.Bool("h", false, "Display help information and exit")
+
+	// Custom usage message
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: hexedit -f <filepath> [-o] [-h]\n\n")
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		fmt.Fprintf(os.Stderr, "  -f <filepath>  Path to the input file (required)\n")
+		fmt.Fprintf(os.Stderr, "  -o             Output the contents and exit without entering interactive mode\n")
+		fmt.Fprintf(os.Stderr, "  -h             Display this help information and exit\n\n")
+		fmt.Fprintf(os.Stderr, "Examples:\n")
+		fmt.Fprintf(os.Stderr, "  # Open a file in interactive mode\n")
+		fmt.Fprintf(os.Stderr, "  hexedit -f myfile.bin\n\n")
+		fmt.Fprintf(os.Stderr, "  # Output file contents and exit\n")
+		fmt.Fprintf(os.Stderr, "  hexedit -f myfile.bin -o\n\n")
+		fmt.Fprintf(os.Stderr, "  # Output help information\n")
+		fmt.Fprintf(os.Stderr, "  hexedit -h\n")
+	}
 
 	// Parse the command line variables
 	flag.Parse()
+
+	// Show help and exit if -h flag is provided
+	if *showHelp {
+		flag.Usage()
+		os.Exit(0)
+	}
 
 	app := app.NewApp(*filePath, logger)
 	err := app.OpenFile()
